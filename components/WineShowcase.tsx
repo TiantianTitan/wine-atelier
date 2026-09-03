@@ -9,6 +9,8 @@ import type { SortOption, Wine } from "@/types";
 
 const categories = ["全部", ...new Set(wines.map((wine) => wine.category))];
 const grades = ["全部等级", ...new Set(wines.map((wine) => wine.grade))];
+const vintageRanges = ["全部年份", "1990年以前", "1990～2000年", "2000年以后"] as const;
+type VintageRange = (typeof vintageRanges)[number];
 const detailHashPrefix = "#酒款/";
 
 function getWineIdFromHash() {
@@ -22,6 +24,13 @@ function formatPrice(value: number) {
 
 function normalizeInventoryCode(value: string) {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function matchesVintageRange(vintage: number, range: VintageRange) {
+  if (range === "1990年以前") return vintage < 1990;
+  if (range === "1990～2000年") return vintage >= 1990 && vintage <= 2000;
+  if (range === "2000年以后") return vintage > 2000;
+  return true;
 }
 
 function WineCard({ wine, index, onOpen }: { wine: Wine; index: number; onOpen: (wine: Wine) => void }) {
@@ -149,6 +158,7 @@ function WineDetail({
 export function WineShowcase() {
   const [category, setCategory] = useState("全部");
   const [grade, setGrade] = useState("全部等级");
+  const [vintageRange, setVintageRange] = useState<VintageRange>("全部年份");
   const [sort, setSort] = useState<SortOption>("featured");
   const [codeQuery, setCodeQuery] = useState("");
   const [selectedWine, setSelectedWine] = useState<Wine | null>(null);
@@ -160,9 +170,10 @@ export function WineShowcase() {
     const filtered = wines.filter((wine) => {
       const categoryMatch = category === "全部" || wine.category === category;
       const gradeMatch = grade === "全部等级" || wine.grade === grade;
+      const vintageMatch = matchesVintageRange(wine.vintage, vintageRange);
       const normalizedQuery = normalizeInventoryCode(codeQuery);
       const codeMatch = !normalizedQuery || normalizeInventoryCode(wine.inventoryCode).includes(normalizedQuery);
-      return categoryMatch && gradeMatch && codeMatch;
+      return categoryMatch && gradeMatch && vintageMatch && codeMatch;
     });
 
     return [...filtered].sort((a, b) => {
@@ -172,7 +183,7 @@ export function WineShowcase() {
       if (sort === "grade-desc") return b.gradeRank - a.gradeRank;
       return a.sortOrder - b.sortOrder;
     });
-  }, [category, codeQuery, grade, sort]);
+  }, [category, codeQuery, grade, sort, vintageRange]);
 
   const animateClose = useCallback(() => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
@@ -329,6 +340,7 @@ export function WineShowcase() {
                   if (nextQuery.trim()) {
                     setCategory("全部");
                     setGrade("全部等级");
+                    setVintageRange("全部年份");
                   }
                 }}
                 placeholder="例如 R-001"
@@ -352,6 +364,19 @@ export function WineShowcase() {
                 </select>
               </label>
               <label>
+                <span>年份</span>
+                <select
+                  value={vintageRange}
+                  onChange={(event) => {
+                    setVintageRange(event.target.value as VintageRange);
+                    setCodeQuery("");
+                  }}
+                  aria-label="按年份筛选"
+                >
+                  {vintageRanges.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </label>
+              <label className="sort-control">
                 <span>排序</span>
                 <select value={sort} onChange={(event) => setSort(event.target.value as SortOption)} aria-label="酒款排序">
                   <option value="featured">推荐顺序</option>

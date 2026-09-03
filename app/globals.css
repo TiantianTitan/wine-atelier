@@ -252,6 +252,10 @@ img {
   gap: 6px;
 }
 
+.select-row .sort-control {
+  grid-column: 1 / -1;
+}
+
 .code-search > span,
 .select-row label > span {
   color: var(--ink-soft);
