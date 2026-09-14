@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ArrowDown, ArrowLeft, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, FileText } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { wines } from "@/data/wines";
@@ -46,7 +46,7 @@ function WineCard({ wine, index, onOpen }: { wine: Wine; index: number; onOpen: 
     >
       <span className="card-image-wrap">
         <Image
-          src={wine.image}
+          src={wine.images[0]}
           alt={`${wine.winery} ${wine.vintage} 年份酒瓶图`}
           width={900}
           height={1350}
@@ -60,7 +60,7 @@ function WineCard({ wine, index, onOpen }: { wine: Wine; index: number; onOpen: 
         <span className="card-name">
           {wine.winery}<span className="card-vintage">（{wine.vintage}）</span>
         </span>
-        <span className="card-price">{formatPrice(wine.price)}</span>
+        <span className="card-price" title="本瓶照片状态估值中位">{formatPrice(wine.price)}</span>
       </span>
     </button>
   );
@@ -75,7 +75,7 @@ function RelatedCard({ wine, onOpen }: { wine: Wine; onOpen: (wine: Wine) => voi
       aria-label={`查看编号 ${wine.inventoryCode}，${wine.winery} 详情`}
     >
       <span className="related-image-wrap">
-        <Image src={wine.image} alt={`${wine.winery} 酒瓶图`} width={900} height={1350} sizes="45vw" />
+        <Image src={wine.images[0]} alt={`${wine.winery} 酒瓶图`} width={900} height={1350} sizes="45vw" />
         {wine.classification ? <span className="classification-tag">{wine.classification}</span> : null}
         <span className="inventory-code">{wine.inventoryCode}</span>
       </span>
@@ -98,12 +98,33 @@ function WineDetail({
   onBack: () => void;
   onOpenRelated: (wine: Wine) => void;
 }) {
+  const detailRef = useRef<HTMLElement | null>(null);
+  const galleryRef = useRef<HTMLDivElement | null>(null);
+  const [activeImage, setActiveImage] = useState(0);
   const relatedWines = wine.related
     .map((id) => wines.find((item) => item.id === id))
     .filter((item): item is Wine => Boolean(item));
 
+  useEffect(() => {
+    setActiveImage(0);
+    detailRef.current?.scrollTo({ top: 0 });
+    galleryRef.current?.scrollTo({ left: 0 });
+  }, [wine.id]);
+
+  const selectImage = (index: number) => {
+    const gallery = galleryRef.current;
+    setActiveImage(index);
+    if (gallery) gallery.scrollTo({ left: gallery.clientWidth * index, behavior: "smooth" });
+  };
+
+  const syncActiveImage = () => {
+    const gallery = galleryRef.current;
+    if (!gallery?.clientWidth) return;
+    setActiveImage(Math.round(gallery.scrollLeft / gallery.clientWidth));
+  };
+
   return (
-    <section className={clsx("detail-view", open && "is-active")} aria-hidden={!open} aria-label="酒款详情">
+    <section ref={detailRef} className={clsx("detail-view", open && "is-active")} aria-hidden={!open} aria-label="酒款详情">
       <div className="detail-topbar">
         <button className="back-button" type="button" onClick={onBack} aria-label="返回酒款目录">
           <ArrowLeft size={16} aria-hidden="true" /> 返回
@@ -112,34 +133,97 @@ function WineDetail({
       </div>
       <article>
         <div className="detail-hero">
-          <Image
-            src={wine.image}
-            alt={`${wine.winery} ${wine.vintage} 年份酒瓶图`}
-            fill
-            priority
-            sizes="100vw"
-          />
+          <div ref={galleryRef} className="detail-gallery" onScroll={syncActiveImage} aria-label="酒瓶照片">
+            {wine.images.map((image, index) => (
+              <div className="detail-slide" key={image} aria-label={`照片 ${index + 1} / ${wine.images.length}`}>
+                <Image
+                  src={image}
+                  alt={`${wine.winery} ${wine.vintage} 年份酒瓶照片 ${index + 1}`}
+                  fill
+                  priority={index === 0}
+                  sizes="100vw"
+                />
+              </div>
+            ))}
+          </div>
+          {wine.images.length > 1 ? (
+            <div className="detail-photo-nav" role="tablist" aria-label="切换酒瓶照片">
+              {wine.images.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  className={clsx(activeImage === index && "is-active")}
+                  role="tab"
+                  aria-selected={activeImage === index}
+                  aria-label={`查看第 ${index + 1} 张照片`}
+                  onClick={() => selectImage(index)}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <div className="detail-hero-copy">
             <span className="detail-code">库存编号 {wine.inventoryCode}</span>
             {wine.classification ? <p className="detail-classification">{wine.classification}</p> : null}
-            <h2>{wine.winery}<span className="detail-vintage">（{wine.vintage}）</span></h2>
+            <h2 className={clsx(wine.winery.length > 38 && "is-long")}>
+              {wine.winery}<span className="detail-vintage">（{wine.vintage}）</span>
+            </h2>
             <div className="detail-price-row">
               <strong>{formatPrice(wine.price)}</strong>
+              <span>本瓶估值中位</span>
             </div>
+            <p className="detail-estimate-range">照片条件区间 {wine.estimateRange}</p>
           </div>
         </div>
         <div className="detail-body">
           <p className="detail-intro">{wine.description}</p>
+          <p className="detail-method-note">估值依据当前照片与公开市场资料，不构成真伪、适饮性或成交价保证。</p>
           <dl className="detail-facts">
             <div className="fact-row"><dt>酒款分类</dt><dd>{wine.category}</dd></div>
-            <div className="fact-row"><dt>等级</dt><dd>{wine.grade}</dd></div>
+            <div className="fact-row"><dt>等级 / 排名</dt><dd>{wine.ranking}</dd></div>
             <div className="fact-row"><dt>产地</dt><dd>{wine.origin}</dd></div>
             <div className="fact-row"><dt>品种</dt><dd>{wine.composition}</dd></div>
           </dl>
+          <section className="research-notes" aria-label="酒款研究摘要">
+            <article className="research-note">
+              <span>01</span>
+              <h3>葡萄与酿造</h3>
+              <p>{wine.production}</p>
+            </article>
+            <article className="research-note">
+              <span>02</span>
+              <h3>年份与口感</h3>
+              <p>{wine.palate}</p>
+            </article>
+            <article className="research-note">
+              <span>03</span>
+              <h3>收藏故事</h3>
+              <p>{wine.story}</p>
+            </article>
+            <article className="research-note">
+              <span>04</span>
+              <h3>市场与现状</h3>
+              <p>{wine.marketStatus}</p>
+            </article>
+          </section>
+          <aside className="condition-block">
+            <span>本瓶照片状态</span>
+            <p>{wine.condition}</p>
+          </aside>
           <div className="quantity-block">
-            <span>库存</span>
-            <strong>{wine.quantity} 瓶</strong>
+            <div>
+              <span>库存</span>
+              <strong>{wine.quantity} 瓶</strong>
+            </div>
+            <div>
+              <span>估值区间</span>
+              <strong>{wine.estimateRange}</strong>
+            </div>
           </div>
+          <a className="research-link" href={wine.reportPath} target="_blank" rel="noreferrer">
+            <FileText size={17} aria-hidden="true" /> 查看完整研究、价格证据与来源
+          </a>
           <section className="related-section" aria-labelledby="related-title">
             <p className="eyebrow">继续浏览</p>
             <h3 id="related-title">相关推荐</h3>
@@ -309,6 +393,7 @@ export function WineShowcase() {
         <section className="catalog" id="酒款目录" aria-labelledby="catalog-title">
           <div className="catalog-heading reveal" data-reveal>
             <h2 id="catalog-title">酒款</h2>
+            <p>31 瓶实物收藏，逐瓶识别、研究与估值。</p>
           </div>
 
           <div className="catalog-controls reveal" data-reveal aria-label="酒款筛选与排序">
@@ -391,6 +476,7 @@ export function WineShowcase() {
 
           <div className="result-line reveal" data-reveal>
             <span aria-live="polite">{visibleWines.length} 款</span>
+            <span>卡片价格为本瓶照片状态估值中位</span>
           </div>
 
           {visibleWines.length ? (

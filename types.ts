@@ -6,16 +6,24 @@ export type Wine = {
   winery: string;
   vintage: number;
   price: number;
+  estimateRange: string;
   category: WineCategory;
   grade: string;
   classification: string | null;
+  ranking: string;
   gradeRank: number;
   sortOrder: number;
-  image: string;
+  images: string[];
   description: string;
   composition: string;
   origin: string;
+  production: string;
+  palate: string;
+  story: string;
+  marketStatus: string;
+  condition: string;
   quantity: number;
+  reportPath: string;
   related: string[];
 };
 
