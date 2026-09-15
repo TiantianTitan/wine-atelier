@@ -15,11 +15,6 @@ type VintageRange = (typeof vintageRanges)[number];
 const detailHashPrefix = "#酒款/";
 const detailTransitionMs = 980;
 const collectionReferenceYear = 2026;
-const weChatInlineVideoAttributes = {
-  "webkit-playsinline": "true",
-  "x5-playsinline": "true",
-  "x5-video-player-type": "h5-page"
-} as const;
 
 function getWineIdFromHash() {
   const decodedHash = decodeURIComponent(window.location.hash);
@@ -347,10 +342,7 @@ export function WineShowcase() {
   const [codeQuery, setCodeQuery] = useState("");
   const [selectedWine, setSelectedWine] = useState<Wine | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [heroVideoPlaying, setHeroVideoPlaying] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
-  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
-  const cellarVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const visibleWines = useMemo(() => {
     const filtered = wines.filter((wine) => {
@@ -420,66 +412,6 @@ export function WineShowcase() {
     return () => document.body.classList.remove("detail-open");
   }, [detailOpen]);
 
-  useEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncHeroMotion = () => {
-      const video = heroVideoRef.current;
-      if (!video) return;
-      if (reduceMotion.matches || document.hidden) {
-        video.pause();
-        setHeroVideoPlaying(false);
-        if (reduceMotion.matches) video.currentTime = 0;
-      } else {
-        video.muted = true;
-        video.playsInline = true;
-        video.setAttribute("muted", "");
-        video.setAttribute("playsinline", "");
-        video.setAttribute("webkit-playsinline", "true");
-        void video.play()
-          .then(() => setHeroVideoPlaying(true))
-          .catch(() => setHeroVideoPlaying(false));
-      }
-    };
-
-    syncHeroMotion();
-    reduceMotion.addEventListener("change", syncHeroMotion);
-    document.addEventListener("WeixinJSBridgeReady", syncHeroMotion);
-    document.addEventListener("visibilitychange", syncHeroMotion);
-    window.addEventListener("pageshow", syncHeroMotion);
-    document.addEventListener("touchstart", syncHeroMotion, { passive: true, once: true });
-    document.addEventListener("pointerdown", syncHeroMotion, { passive: true, once: true });
-
-    return () => {
-      reduceMotion.removeEventListener("change", syncHeroMotion);
-      document.removeEventListener("WeixinJSBridgeReady", syncHeroMotion);
-      document.removeEventListener("visibilitychange", syncHeroMotion);
-      window.removeEventListener("pageshow", syncHeroMotion);
-      document.removeEventListener("touchstart", syncHeroMotion);
-      document.removeEventListener("pointerdown", syncHeroMotion);
-    };
-  }, []);
-
-  useEffect(() => {
-    const video = cellarVideoRef.current;
-    if (!video) return;
-
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (reduceMotion.matches || !entry.isIntersecting) {
-          video.pause();
-          if (reduceMotion.matches) video.currentTime = 0;
-          return;
-        }
-        void video.play().catch(() => undefined);
-      },
-      { rootMargin: "160px 0px", threshold: 0.18 }
-    );
-
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, []);
-
   useEffect(() => () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   }, []);
@@ -524,7 +456,7 @@ export function WineShowcase() {
 
       <main>
         <section className="hero" id="顶部" aria-labelledby="hero-title">
-          <div className={clsx("hero-media", heroVideoPlaying && "is-playing")} aria-hidden="true">
+          <div className="hero-media" aria-hidden="true">
             <picture>
               <source media="(prefers-reduced-motion: reduce)" srcSet="/assets/hero/wine-pour-poster.webp" />
               <img
@@ -536,25 +468,6 @@ export function WineShowcase() {
                 fetchPriority="high"
               />
             </picture>
-            <video
-              ref={heroVideoRef}
-              className="hero-image hero-video"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              disablePictureInPicture
-              disableRemotePlayback
-              poster="/assets/hero/wine-pour-poster.webp"
-              {...weChatInlineVideoAttributes}
-              onPlaying={() => setHeroVideoPlaying(true)}
-              onPause={() => setHeroVideoPlaying(false)}
-              onWaiting={() => setHeroVideoPlaying(false)}
-              onStalled={() => setHeroVideoPlaying(false)}
-            >
-              <source src="/assets/hero/wine-pour-loop-mobile.mp4" type="video/mp4" />
-            </video>
           </div>
           <div className="hero-shade" aria-hidden="true" />
           <div className="hero-rule" aria-hidden="true"><span /></div>
@@ -576,17 +489,16 @@ export function WineShowcase() {
           </div>
           <div className="overture-media reveal" data-reveal>
             <div className="overture-frame">
-              <video
-                ref={cellarVideoRef}
-                muted
-                loop
-                playsInline
-                preload="none"
-                poster="/assets/hero/cellar-pour-poster.webp"
-                aria-hidden="true"
-              >
-                <source src="/assets/hero/cellar-pour-loop.mp4" type="video/mp4" />
-              </video>
+              <picture>
+                <source media="(prefers-reduced-motion: reduce)" srcSet="/assets/hero/cellar-pour-poster.webp" />
+                <img
+                  src="/assets/hero/cellar-pour-fallback.webp"
+                  alt=""
+                  width="420"
+                  height="700"
+                  aria-hidden="true"
+                />
+              </picture>
               <div className="overture-shade" aria-hidden="true" />
               <span className="overture-caption">生日 · 纪念日 · 想起的人</span>
             </div>
