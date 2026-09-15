@@ -595,7 +595,7 @@ export function WineShowcase() {
           <div className="catalog-heading reveal" data-reveal>
             <p className="eyebrow">按你记得的那一年</p>
             <h2 id="catalog-title">你在找哪一年</h2>
-            <p>也许是你的出生年，也许是父母结婚的那一年。年份是故事，能不能喝，要看每瓶自己的状态。</p>
+            <p>也许是你的出生年，也许是父母结婚的那一年。年份是故事。部分酒款以收藏为主，如需开瓶，请先确认酒体状态是否适合饮用。</p>
           </div>
 
           <div className="catalog-controls reveal" data-reveal aria-label="酒款筛选与排序">
