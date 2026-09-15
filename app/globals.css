@@ -190,7 +190,7 @@ img {
   opacity: 0;
   transform: scale(1.025);
   pointer-events: none;
-  transition: opacity 650ms var(--ease-out), transform 1400ms var(--ease-out);
+  transition: opacity 240ms var(--ease-out), transform 900ms var(--ease-out);
 }
 
 .hero-media.is-playing .hero-video {
@@ -713,6 +713,23 @@ img {
 
 .wine-card:active .card-image-wrap img {
   transform: scale(1.035);
+}
+
+.volume-tag {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  left: 12px;
+  padding: 7px 8px 6px 9px;
+  color: #fffaf2;
+  border-left: 2px solid var(--brass);
+  background: rgba(54, 19, 26, 0.92);
+  box-shadow: 0 5px 16px rgba(20, 9, 8, 0.22);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
 }
 
 .classification-tag {

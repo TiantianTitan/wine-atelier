@@ -66,6 +66,7 @@ function WineCard({ wine, index, onOpen }: { wine: Wine; index: number; onOpen: 
           height={1350}
           sizes="(max-width: 480px) 47vw, 220px"
         />
+        {wine.volume === "1.5L" ? <span className="volume-tag">1.5L 大瓶装</span> : null}
         {wine.classification ? <span className="classification-tag">{wine.classification}</span> : null}
         <span className="inventory-code">{wine.inventoryCode}</span>
       </span>
@@ -245,6 +246,7 @@ function WineDetail({
           </aside>
           <dl className="detail-facts">
             <div className="fact-row"><dt>年份</dt><dd>{wine.vintage} 年 · 距今 {getBottleAge(wine.vintage)} 年</dd></div>
+            <div className="fact-row"><dt>容量</dt><dd>{wine.volume}</dd></div>
             <div className="fact-row"><dt>来自</dt><dd>{wine.origin}</dd></div>
             <div className="fact-row"><dt>酒款身份</dt><dd>{content.position}</dd></div>
             <div className="fact-row"><dt>品种</dt><dd>{wine.composition}</dd></div>
@@ -523,14 +525,17 @@ export function WineShowcase() {
       <main>
         <section className="hero" id="顶部" aria-labelledby="hero-title">
           <div className={clsx("hero-media", heroVideoPlaying && "is-playing")} aria-hidden="true">
-            <img
-              className="hero-image hero-poster"
-              src="/assets/hero/wine-pour-poster.webp"
-              alt=""
-              width="720"
-              height="1280"
-              fetchPriority="high"
-            />
+            <picture>
+              <source media="(prefers-reduced-motion: reduce)" srcSet="/assets/hero/wine-pour-poster.webp" />
+              <img
+                className="hero-image hero-poster"
+                src="/assets/hero/wine-pour-fallback.webp"
+                alt=""
+                width="480"
+                height="854"
+                fetchPriority="high"
+              />
+            </picture>
             <video
               ref={heroVideoRef}
               className="hero-image hero-video"

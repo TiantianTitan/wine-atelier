@@ -5,6 +5,7 @@ export type Wine = {
   inventoryCode: string;
   winery: string;
   vintage: number;
+  volume: "1.5L" | "75cl";
   price: number;
   estimateRange: string;
   category: WineCategory;

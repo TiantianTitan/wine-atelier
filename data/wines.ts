@@ -1,6 +1,8 @@
 import type { Wine } from "@/types";
 
-export const wines: Wine[] = [
+type WineWithoutVolume = Omit<Wine, "volume">;
+
+const wineCatalog: WineWithoutVolume[] = [
   {
     id: "les-grands-fiefs-1996",
     inventoryCode: "R-001",
@@ -782,3 +784,8 @@ export const wines: Wine[] = [
     related: ["saint-christoly-1967", "grand-vin-medoc-1971"]
   }
 ];
+
+export const wines: Wine[] = wineCatalog.map((wine) => ({
+  ...wine,
+  volume: wine.inventoryCode === "R-001" ? "1.5L" : "75cl"
+}));
