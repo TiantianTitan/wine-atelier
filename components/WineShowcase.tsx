@@ -1,9 +1,10 @@
 "use client";
 
 import clsx from "clsx";
-import { ArrowDown, ArrowLeft, ArrowUp, FileText } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { salesContent } from "@/data/sales-content";
 import { wines } from "@/data/wines";
 import type { SortOption, Wine } from "@/types";
 
@@ -60,7 +61,7 @@ function WineCard({ wine, index, onOpen }: { wine: Wine; index: number; onOpen: 
         <span className="card-name">
           {wine.winery}<span className="card-vintage">（{wine.vintage}）</span>
         </span>
-        <span className="card-price" title="本瓶照片状态估值中位">{formatPrice(wine.price)}</span>
+        <span className="card-price" title="建议收藏报价">{formatPrice(wine.price)}</span>
       </span>
     </button>
   );
@@ -101,6 +102,7 @@ function WineDetail({
   const detailRef = useRef<HTMLElement | null>(null);
   const galleryRef = useRef<HTMLDivElement | null>(null);
   const [activeImage, setActiveImage] = useState(0);
+  const content = salesContent[wine.id];
   const relatedWines = wine.related
     .map((id) => wines.find((item) => item.id === id))
     .filter((item): item is Wine => Boolean(item));
@@ -171,59 +173,50 @@ function WineDetail({
             </h2>
             <div className="detail-price-row">
               <strong>{formatPrice(wine.price)}</strong>
-              <span>本瓶估值中位</span>
+              <span>收藏报价</span>
             </div>
-            <p className="detail-estimate-range">照片条件区间 {wine.estimateRange}</p>
           </div>
         </div>
         <div className="detail-body">
-          <p className="detail-intro">{wine.description}</p>
-          <p className="detail-method-note">估值依据当前照片与公开市场资料，不构成真伪、适饮性或成交价保证。</p>
+          <p className="detail-intro">{content.intro}</p>
           <dl className="detail-facts">
             <div className="fact-row"><dt>酒款分类</dt><dd>{wine.category}</dd></div>
-            <div className="fact-row"><dt>等级 / 排名</dt><dd>{wine.ranking}</dd></div>
+            <div className="fact-row"><dt>收藏身份</dt><dd>{content.position}</dd></div>
             <div className="fact-row"><dt>产地</dt><dd>{wine.origin}</dd></div>
             <div className="fact-row"><dt>品种</dt><dd>{wine.composition}</dd></div>
           </dl>
-          <section className="research-notes" aria-label="酒款研究摘要">
+          <section className="research-notes" aria-label="酒款收藏亮点">
             <article className="research-note">
               <span>01</span>
               <h3>葡萄与酿造</h3>
-              <p>{wine.production}</p>
+              <p>{content.craft}</p>
             </article>
             <article className="research-note">
               <span>02</span>
-              <h3>年份与口感</h3>
-              <p>{wine.palate}</p>
+              <h3>香气与风格</h3>
+              <p>{content.palate}</p>
             </article>
             <article className="research-note">
               <span>03</span>
-              <h3>收藏故事</h3>
-              <p>{wine.story}</p>
-            </article>
-            <article className="research-note">
-              <span>04</span>
-              <h3>市场与现状</h3>
-              <p>{wine.marketStatus}</p>
+              <h3>年份与故事</h3>
+              <p>{content.story}</p>
             </article>
           </section>
-          <aside className="condition-block">
-            <span>本瓶照片状态</span>
-            <p>{wine.condition}</p>
-          </aside>
           <div className="quantity-block">
             <div>
               <span>库存</span>
               <strong>{wine.quantity} 瓶</strong>
             </div>
             <div>
-              <span>估值区间</span>
-              <strong>{wine.estimateRange}</strong>
+              <span>收藏报价</span>
+              <strong>{formatPrice(wine.price)}</strong>
             </div>
           </div>
-          <a className="research-link" href={wine.reportPath} target="_blank" rel="noreferrer">
-            <FileText size={17} aria-hidden="true" /> 查看完整研究、价格证据与来源
-          </a>
+          <details className="condition-disclosure">
+            <summary>购买前查看藏品状态</summary>
+            <p>{wine.condition}</p>
+            <small>藏家确认本批藏品当前均无漏液。老年份酒按单瓶现状收藏，建议成交前复核液面、封帽与储藏信息；页面风味描述不构成适饮保证。</small>
+          </details>
           <section className="related-section" aria-labelledby="related-title">
             <p className="eyebrow">继续浏览</p>
             <h3 id="related-title">相关推荐</h3>
@@ -393,7 +386,7 @@ export function WineShowcase() {
         <section className="catalog" id="酒款目录" aria-labelledby="catalog-title">
           <div className="catalog-heading reveal" data-reveal>
             <h2 id="catalog-title">酒款</h2>
-            <p>31 瓶实物收藏，逐瓶识别、研究与估值。</p>
+            <p>30 瓶私人珍藏，藏家确认当前均无漏液；报价综合良好保存状态、年份稀缺性与历史收藏价值。</p>
           </div>
 
           <div className="catalog-controls reveal" data-reveal aria-label="酒款筛选与排序">
@@ -476,7 +469,7 @@ export function WineShowcase() {
 
           <div className="result-line reveal" data-reveal>
             <span aria-live="polite">{visibleWines.length} 款</span>
-            <span>卡片价格为本瓶照片状态估值中位</span>
+            <span>卡片价格为建议收藏报价</span>
           </div>
 
           {visibleWines.length ? (
