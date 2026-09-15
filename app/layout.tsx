@@ -2,14 +2,40 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
+const shareTitle = "家中酒单｜1955—1997 私人年份藏酒";
+const shareDescription = "30 瓶 1955—1997 年私人藏酒，以法国酒款为主。按出生年份、纪念年份与一段旧时光，找到值得留下的那一年。";
+const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  ?? process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ?? process.env.VERCEL_URL
+  ?? "http://localhost:3000";
+const normalizedSiteUrl = configuredSiteUrl.startsWith("http")
+  ? configuredSiteUrl
+  : `https://${configuredSiteUrl}`;
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(normalizedSiteUrl),
   title: "家中酒单",
-  description: "从 1955 到 1997 的 30 瓶私人藏酒，按出生年份、纪念日与法国故事挑选",
+  description: shareDescription,
+  applicationName: "家中酒单",
+  alternates: {
+    canonical: "/"
+  },
   openGraph: {
-    title: "家中酒单",
-    description: "从 1955 到 1997 的 30 瓶私人藏酒，按出生年份、纪念日与法国故事挑选",
-    images: ["/assets/hero/wine-pour-poster.webp"]
+    title: shareTitle,
+    description: shareDescription,
+    url: "/",
+    siteName: "家中酒单",
+    locale: "zh_CN",
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: shareTitle,
+    description: shareDescription
+  },
+  robots: {
+    index: true,
+    follow: true
   }
 };
 

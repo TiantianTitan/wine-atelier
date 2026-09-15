@@ -15,6 +15,11 @@ type VintageRange = (typeof vintageRanges)[number];
 const detailHashPrefix = "#酒款/";
 const detailTransitionMs = 980;
 const collectionReferenceYear = 2026;
+const weChatInlineVideoAttributes = {
+  "webkit-playsinline": "true",
+  "x5-playsinline": "true",
+  "x5-video-player-type": "h5-page"
+} as const;
 
 function getWineIdFromHash() {
   const decodedHash = decodeURIComponent(window.location.hash);
@@ -59,7 +64,6 @@ function WineCard({ wine, index, onOpen }: { wine: Wine; index: number; onOpen: 
           alt={`${wine.winery} ${wine.vintage} 年份酒瓶图`}
           width={900}
           height={1350}
-          priority={index < 2}
           sizes="(max-width: 480px) 47vw, 220px"
         />
         {wine.classification ? <span className="classification-tag">{wine.classification}</span> : null}
@@ -341,6 +345,7 @@ export function WineShowcase() {
   const [codeQuery, setCodeQuery] = useState("");
   const [selectedWine, setSelectedWine] = useState<Wine | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [heroVideoPlaying, setHeroVideoPlaying] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const cellarVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -418,17 +423,38 @@ export function WineShowcase() {
     const syncHeroMotion = () => {
       const video = heroVideoRef.current;
       if (!video) return;
-      if (reduceMotion.matches) {
+      if (reduceMotion.matches || document.hidden) {
         video.pause();
-        video.currentTime = 0;
+        setHeroVideoPlaying(false);
+        if (reduceMotion.matches) video.currentTime = 0;
       } else {
-        void video.play().catch(() => undefined);
+        video.muted = true;
+        video.playsInline = true;
+        video.setAttribute("muted", "");
+        video.setAttribute("playsinline", "");
+        video.setAttribute("webkit-playsinline", "true");
+        void video.play()
+          .then(() => setHeroVideoPlaying(true))
+          .catch(() => setHeroVideoPlaying(false));
       }
     };
 
     syncHeroMotion();
     reduceMotion.addEventListener("change", syncHeroMotion);
-    return () => reduceMotion.removeEventListener("change", syncHeroMotion);
+    document.addEventListener("WeixinJSBridgeReady", syncHeroMotion);
+    document.addEventListener("visibilitychange", syncHeroMotion);
+    window.addEventListener("pageshow", syncHeroMotion);
+    document.addEventListener("touchstart", syncHeroMotion, { passive: true, once: true });
+    document.addEventListener("pointerdown", syncHeroMotion, { passive: true, once: true });
+
+    return () => {
+      reduceMotion.removeEventListener("change", syncHeroMotion);
+      document.removeEventListener("WeixinJSBridgeReady", syncHeroMotion);
+      document.removeEventListener("visibilitychange", syncHeroMotion);
+      window.removeEventListener("pageshow", syncHeroMotion);
+      document.removeEventListener("touchstart", syncHeroMotion);
+      document.removeEventListener("pointerdown", syncHeroMotion);
+    };
   }, []);
 
   useEffect(() => {
@@ -496,19 +522,35 @@ export function WineShowcase() {
 
       <main>
         <section className="hero" id="顶部" aria-labelledby="hero-title">
-          <video
-            ref={heroVideoRef}
-            className="hero-image hero-video"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            poster="/assets/hero/wine-pour-poster.webp"
-            aria-hidden="true"
-          >
-            <source src="/assets/hero/wine-pour-loop-mobile.mp4" type="video/mp4" />
-          </video>
+          <div className={clsx("hero-media", heroVideoPlaying && "is-playing")} aria-hidden="true">
+            <img
+              className="hero-image hero-poster"
+              src="/assets/hero/wine-pour-poster.webp"
+              alt=""
+              width="720"
+              height="1280"
+              fetchPriority="high"
+            />
+            <video
+              ref={heroVideoRef}
+              className="hero-image hero-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              disablePictureInPicture
+              disableRemotePlayback
+              poster="/assets/hero/wine-pour-poster.webp"
+              {...weChatInlineVideoAttributes}
+              onPlaying={() => setHeroVideoPlaying(true)}
+              onPause={() => setHeroVideoPlaying(false)}
+              onWaiting={() => setHeroVideoPlaying(false)}
+              onStalled={() => setHeroVideoPlaying(false)}
+            >
+              <source src="/assets/hero/wine-pour-loop-mobile.mp4" type="video/mp4" />
+            </video>
+          </div>
           <div className="hero-shade" aria-hidden="true" />
           <div className="hero-rule" aria-hidden="true"><span /></div>
           <div className="hero-content">

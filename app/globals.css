@@ -144,6 +144,31 @@ img {
   color: #fffaf2;
 }
 
+.hero-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--night);
+}
+
+.hero-media::after {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(circle at 72% 28%, rgba(203, 152, 99, 0.2), transparent 27%);
+  mix-blend-mode: soft-light;
+  opacity: 0.5;
+  transform: translate3d(-5%, 0, 0);
+  animation: hero-ambient-drift 7s ease-in-out infinite alternate;
+  transition: opacity 600ms var(--ease-out);
+}
+
+.hero-media.is-playing::after {
+  opacity: 0;
+}
+
 .hero-image {
   position: absolute;
   inset: 0;
@@ -151,11 +176,26 @@ img {
   height: 100%;
   object-fit: cover;
   object-position: 51% 48%;
-  animation: hero-settle 1400ms var(--ease-out) both;
+}
+
+.hero-poster {
+  z-index: 0;
+  animation:
+    hero-poster-settle 1200ms var(--ease-out) both,
+    hero-poster-drift 9s ease-in-out 1200ms infinite alternate;
 }
 
 .hero-video {
+  z-index: 1;
+  opacity: 0;
+  transform: scale(1.025);
   pointer-events: none;
+  transition: opacity 650ms var(--ease-out), transform 1400ms var(--ease-out);
+}
+
+.hero-media.is-playing .hero-video {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .hero-shade {
@@ -1616,9 +1656,19 @@ body.detail-open {
   transform: translateY(0);
 }
 
-@keyframes hero-settle {
-  from { opacity: 0; transform: scale(1.08); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes hero-poster-settle {
+  from { opacity: 0; transform: scale(1.12); }
+  to { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes hero-poster-drift {
+  from { transform: scale(1.04) translate3d(-0.7%, 0.35%, 0); }
+  to { transform: scale(1.095) translate3d(0.8%, -0.6%, 0); }
+}
+
+@keyframes hero-ambient-drift {
+  from { opacity: 0.34; transform: translate3d(-5%, 0, 0) scale(1); }
+  to { opacity: 0.54; transform: translate3d(5%, -2%, 0) scale(1.08); }
 }
 
 @keyframes rise-in {
@@ -1663,6 +1713,12 @@ body.detail-open {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .hero-poster,
+  .hero-media::after {
+    animation: none !important;
+    transform: none;
+  }
+
   *, *::before, *::after {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
