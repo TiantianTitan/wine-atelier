@@ -461,10 +461,10 @@ export function WineShowcase() {
               <source media="(prefers-reduced-motion: reduce)" srcSet="/assets/hero/wine-pour-poster.webp" />
               <img
                 className="hero-image hero-poster"
-                src="/assets/hero/wine-pour-fallback.webp"
+                src="/assets/hero/wine-pour-fallback.webp?v=2"
                 alt=""
-                width="480"
-                height="854"
+                width="720"
+                height="1280"
                 fetchPriority="high"
               />
             </picture>
@@ -492,10 +492,12 @@ export function WineShowcase() {
               <picture>
                 <source media="(prefers-reduced-motion: reduce)" srcSet="/assets/hero/cellar-pour-poster.webp" />
                 <img
-                  src="/assets/hero/cellar-pour-fallback.webp"
+                  src="/assets/hero/cellar-pour-fallback.webp?v=2"
                   alt=""
-                  width="420"
-                  height="700"
+                  width="720"
+                  height="1280"
+                  loading="lazy"
+                  decoding="async"
                   aria-hidden="true"
                 />
               </picture>
